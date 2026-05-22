@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//mnt/d/Code/JavaWeb/EX002/**)",
+      "Read(//mnt/d/Code/JavaWeb/EX002/frontend/**)",
+      "Bash(npm install *)",
+      "Bash(npx vite *)",
+      "WebFetch(domain:localhost)",
+      "WebFetch(domain:cdn.jsdelivr.net)"
+    ]
+  }
+}
