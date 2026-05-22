@@ -108,8 +108,10 @@ watch(() => route.query, () => {
   <div class="amazon-products">
     <!-- 分类标题栏 -->
     <div class="category-bar">
-      <span class="category-title">搜索结果</span>
-      <span class="category-count" v-if="total > 0">1–{{ products.length }} / 共 {{ total }} 条</span>
+      <span class="category-title">
+        <i class="layui-icon layui-icon-list"></i> 搜索结果
+      </span>
+      <span class="category-count layui-font-13" v-if="total > 0">1–{{ products.length }} / 共 {{ total }} 条</span>
     </div>
 
     <!-- 商品网格 -->
@@ -140,7 +142,9 @@ watch(() => route.query, () => {
           </div>
 
           <!-- Best Seller 标签 -->
-          <div v-if="isBestseller(product)" class="bestseller-badge">Best Seller</div>
+          <div v-if="isBestseller(product)" class="bestseller-badge">
+            <i class="layui-icon layui-icon-praise"></i> Best Seller
+          </div>
 
           <!-- 价格 -->
           <div class="cell-price">
@@ -151,7 +155,7 @@ watch(() => route.query, () => {
 
           <!-- 配送信息 -->
           <div class="cell-delivery">{{ deliveryInfo(product) }}</div>
-          <div class="cell-stock" v-if="product.stock <= 10 && product.stock > 0">
+          <div class="cell-stock layui-font-red" v-if="product.stock <= 10 && product.stock > 0">
             仅剩 {{ product.stock }} 件 - 请尽快下单
           </div>
         </div>
@@ -164,7 +168,7 @@ watch(() => route.query, () => {
             class="add-btn"
             @click="handleAddToCart(product)"
           >
-            加入购物车
+            <i class="layui-icon layui-icon-cart-simple"></i> 加入购物车
           </el-button>
         </div>
       </div>

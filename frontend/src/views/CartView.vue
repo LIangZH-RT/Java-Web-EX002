@@ -102,11 +102,11 @@ onMounted(() => {
 <template>
   <div>
     <div class="page-header">
-      <h2>购物车</h2>
-      <p>管理已添加的商品，修改数量或移除商品</p>
+      <h2><i class="layui-icon layui-icon-cart"></i> 购物车</h2>
+      <p class="layui-font-13">管理已添加的商品，修改数量或移除商品</p>
     </div>
 
-    <div class="card-container" v-loading="loading">
+    <div class="card-container layui-panel" v-loading="loading">
       <template v-if="cartItems.length > 0">
         <el-table
           :data="cartItems"
@@ -152,8 +152,7 @@ onMounted(() => {
           <el-table-column label="操作" width="100" align="center">
             <template #default="{ row }">
               <el-button type="danger" link @click="handleDelete(row)">
-                <el-icon><Delete /></el-icon>
-                移除
+                <i class="layui-icon layui-icon-delete"></i> 移除
               </el-button>
             </template>
           </el-table-column>
@@ -161,16 +160,15 @@ onMounted(() => {
 
         <div class="cart-footer">
           <div class="cart-total">
-            <span class="total-label">合计：</span>
+            <span class="total-label layui-font-16">合计：</span>
             <span class="total-price">¥{{ totalPrice.toFixed(2) }}</span>
           </div>
           <div class="cart-actions">
             <el-button @click="goShopping">
-              <el-icon><ShoppingCart /></el-icon>
-              继续购物
+              <i class="layui-icon layui-icon-cart-simple"></i> 继续购物
             </el-button>
             <el-button type="primary" size="large">
-              去结算 ({{ cartItems.reduce((s, i) => s + i.quantity, 0) }} 件)
+              <i class="layui-icon layui-icon-rmb"></i> 去结算 ({{ cartItems.reduce((s, i) => s + i.quantity, 0) }} 件)
             </el-button>
           </div>
         </div>
@@ -189,8 +187,7 @@ onMounted(() => {
 
       <el-empty v-else description="购物车是空的">
         <el-button type="primary" @click="goShopping">
-          <el-icon><ShoppingCart /></el-icon>
-          去逛逛
+          <i class="layui-icon layui-icon-cart"></i> 去逛逛
         </el-button>
       </el-empty>
     </div>

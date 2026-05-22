@@ -6,7 +6,10 @@
       "Bash(npm install *)",
       "Bash(npx vite *)",
       "WebFetch(domain:localhost)",
-      "WebFetch(domain:cdn.jsdelivr.net)"
+      "WebFetch(domain:cdn.jsdelivr.net)",
+      "Bash(curl -sL -o 'd:\\\\Code\\\\JavaWeb\\\\EX002\\\\frontend\\\\src\\\\assets\\\\layui\\\\css\\\\layui.css' 'https://unpkg.com/layui@2.13.6/dist/css/layui.css')",
+      "Bash(npm run *)",
+      "Bash(npx vue-tsc *)"
     ]
   }
 }

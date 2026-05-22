@@ -58,25 +58,33 @@ function handleRegister() {
   <div class="login-page">
     <!-- Logo 区 -->
     <div class="login-logo" @click="router.push('/')">
-      <el-icon :size="36"><ShoppingCart /></el-icon>
+      <i class="layui-icon layui-icon-cart-simple layui-font-30"></i>
       <span class="logo-text">ShopStore</span>
     </div>
 
     <!-- 卡片 -->
-    <div class="login-card">
+    <div class="login-card layui-panel">
       <el-tabs v-model="activeTab" class="login-tabs" stretch>
         <el-tab-pane label="登录" name="login">
-          <p class="tab-subtitle">使用邮箱和密码登录您的账户</p>
+          <p class="tab-subtitle layui-font-13">使用邮箱和密码登录您的账户</p>
           <el-form :model="loginForm" label-position="top" size="large">
             <el-form-item label="邮箱地址">
-              <el-input v-model="loginForm.email" placeholder="请输入邮箱" />
+              <el-input v-model="loginForm.email" placeholder="请输入邮箱">
+                <template #prefix>
+                  <i class="layui-icon layui-icon-email"></i>
+                </template>
+              </el-input>
             </el-form-item>
             <el-form-item label="密码">
-              <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password />
+              <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password>
+                <template #prefix>
+                  <i class="layui-icon layui-icon-password"></i>
+                </template>
+              </el-input>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" :loading="loginLoading" class="submit-btn" @click="handleLogin">
-                登录
+                <i class="layui-icon layui-icon-ok"></i> 登录
               </el-button>
             </el-form-item>
           </el-form>
@@ -87,23 +95,39 @@ function handleRegister() {
         </el-tab-pane>
 
         <el-tab-pane label="注册" name="register">
-          <p class="tab-subtitle">创建一个新账户开始购物</p>
+          <p class="tab-subtitle layui-font-13">创建一个新账户开始购物</p>
           <el-form :model="registerForm" label-position="top" size="large">
             <el-form-item label="姓名">
-              <el-input v-model="registerForm.name" placeholder="请输入姓名" />
+              <el-input v-model="registerForm.name" placeholder="请输入姓名">
+                <template #prefix>
+                  <i class="layui-icon layui-icon-username"></i>
+                </template>
+              </el-input>
             </el-form-item>
             <el-form-item label="邮箱地址">
-              <el-input v-model="registerForm.email" placeholder="请输入邮箱" />
+              <el-input v-model="registerForm.email" placeholder="请输入邮箱">
+                <template #prefix>
+                  <i class="layui-icon layui-icon-email"></i>
+                </template>
+              </el-input>
             </el-form-item>
             <el-form-item label="密码">
-              <el-input v-model="registerForm.password" type="password" placeholder="至少 6 位密码" show-password />
+              <el-input v-model="registerForm.password" type="password" placeholder="至少 6 位密码" show-password>
+                <template #prefix>
+                  <i class="layui-icon layui-icon-password"></i>
+                </template>
+              </el-input>
             </el-form-item>
             <el-form-item label="确认密码">
-              <el-input v-model="registerForm.confirmPassword" type="password" placeholder="再次输入密码" show-password />
+              <el-input v-model="registerForm.confirmPassword" type="password" placeholder="再次输入密码" show-password>
+                <template #prefix>
+                  <i class="layui-icon layui-icon-password"></i>
+                </template>
+              </el-input>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" :loading="registerLoading" class="submit-btn" @click="handleRegister">
-                注册
+                <i class="layui-icon layui-icon-ok-circle"></i> 注册
               </el-button>
             </el-form-item>
           </el-form>

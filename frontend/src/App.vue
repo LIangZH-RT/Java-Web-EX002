@@ -14,6 +14,7 @@ function scrollToTop() {
     <div class="top-navbar">
       <div class="nav-inner">
         <div class="nav-left" @click="router.push('/')">
+          <i class="layui-icon layui-icon-cart-simple layui-font-22"></i>
           <span class="nav-logo">ShopStore</span>
         </div>
 
@@ -29,6 +30,7 @@ function scrollToTop() {
             <span class="nav-title">全部商品</span>
           </div>
           <div class="nav-item nav-cart" @click="router.push('/cart')">
+            <i class="layui-icon layui-icon-cart"></i>
             <span class="nav-title cart-label">购物车</span>
           </div>
         </div>
@@ -43,7 +45,9 @@ function scrollToTop() {
     <!-- 底部 -->
     <div class="app-footer">
       <div class="footer-back">
-        <a href="#" @click.prevent="scrollToTop">回到顶部</a>
+        <a href="#" @click.prevent="scrollToTop">
+          <i class="layui-icon layui-icon-up"></i> 回到顶部
+        </a>
       </div>
       <div class="footer-main">
         <div class="footer-col">
@@ -99,6 +103,7 @@ function scrollToTop() {
 .nav-left {
   display: flex;
   align-items: center;
+  gap: 6px;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 2px;
@@ -135,6 +140,7 @@ function scrollToTop() {
 .nav-cart {
   flex-direction: row;
   align-items: flex-end;
+  gap: 4px;
 }
 .cart-label { margin-bottom: 0; }
 

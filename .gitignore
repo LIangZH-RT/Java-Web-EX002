@@ -50,3 +50,6 @@ docs/
 
 # vue
 /frontend/node_modules/
+
+# test files
+src/test

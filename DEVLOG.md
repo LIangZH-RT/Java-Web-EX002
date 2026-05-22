@@ -166,6 +166,66 @@ frontend/src/
 
 ---
 
+## 2026-05-22 — Layui 集成
+
+### 1. Layui CSS 引入
+
+- 从 unpkg 下载 Layui v2.13.6 完整 CSS（131KB），写入 `src/assets/layui/css/layui.css`
+- 字体文件已就绪：`iconfont.eot/woff/woff2/ttf/svg`（位于 `src/assets/layui/font/`）
+- 在 `main.ts` 中导入 `layui.css`，位于 Element Plus CSS 之后、`main.css` 之前
+- 导入顺序确保：Element Plus 基础样式 < Layui 工具类 < 自定义全局样式 < 组件 scoped 样式
+
+### 2. App.vue — 导航栏与底部图标增强
+
+| 位置 | 使用的 Layui 类 |
+|------|----------------|
+| Logo 旁 | `layui-icon layui-icon-cart-simple layui-font-22` |
+| 购物车导航 | `layui-icon layui-icon-cart` |
+| 回到顶部 | `layui-icon layui-icon-up` |
+
+### 3. ProductListView.vue — 商品列表页增强
+
+| 位置 | 使用的 Layui 类 |
+|------|----------------|
+| 分类标题 | `layui-icon layui-icon-list` |
+| 分类计数 | `layui-font-13` |
+| Best Seller 徽章 | `layui-icon layui-icon-praise` |
+| 库存预警文字 | `layui-font-red` |
+| 加入购物车按钮 | `layui-icon layui-icon-cart-simple` |
+
+### 4. LoginView.vue — 登录注册页增强
+
+| 位置 | 使用的 Layui 类 |
+|------|----------------|
+| Logo | `layui-icon layui-icon-cart-simple layui-font-30` |
+| 表单卡片 | `layui-panel` |
+| 邮箱输入前缀 | `layui-icon layui-icon-email` |
+| 密码输入前缀 | `layui-icon layui-icon-password` |
+| 姓名输入前缀 | `layui-icon layui-icon-username` |
+| 登录按钮 | `layui-icon layui-icon-ok` |
+| 注册按钮 | `layui-icon layui-icon-ok-circle` |
+
+### 5. CartView.vue — 购物车页增强
+
+| 位置 | 使用的 Layui 类 |
+|------|----------------|
+| 页面标题 | `layui-icon layui-icon-cart` |
+| 卡片容器 | `layui-panel` |
+| 继续购物按钮 | `layui-icon layui-icon-cart-simple` |
+| 结算按钮 | `layui-icon layui-icon-rmb` |
+| 移除按钮 | `layui-icon layui-icon-delete` |
+| 空购物车按钮 | `layui-icon layui-icon-cart` |
+| 合计标签 | `layui-font-16` |
+
+### 6. 设计原则
+
+- 所有组件 scoped 样式保持不变，确保现有页面视觉效果不受影响
+- 仅以**增量方式**添加 Layui 图标类和工具类，不修改任何现有样式规则
+- Layui 图标字体通过 `@font-face` 引用本地字体文件，构建时由 Vite 自动打包至 `dist/assets/`
+- TypeScript 类型检查通过，Vite 构建成功
+
+---
+
 ## 待完成
 
 - [ ] 后端 Java 代码：实体类 / DAO / Service / Servlet / Filter / Listener
