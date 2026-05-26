@@ -1,11 +1,45 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { getCurrentUser, logout, type LoginUser } from '@/api/authApi'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const currentUser = ref<LoginUser | null>(null)
 
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+async function loadCurrentUser() {
+  try {
+    const res = await getCurrentUser()
+    currentUser.value = res.data
+  } catch {
+    currentUser.value = null
+  }
+}
+
+async function handleAccountClick() {
+  if (!currentUser.value) {
+    router.push('/login')
+    return
+  }
+  try {
+    await logout()
+    currentUser.value = null
+    ElMessage.success('已退出登录')
+  } catch {
+    loadCurrentUser()
+  }
+}
+
+onMounted(() => {
+  loadCurrentUser()
+  router.afterEach(() => {
+    loadCurrentUser()
+  })
+})
 </script>
 
 <template>
@@ -21,9 +55,9 @@ function scrollToTop() {
         <div class="nav-spacer"></div>
 
         <div class="nav-right">
-          <div class="nav-item" @click="router.push('/login')">
-            <span class="nav-label">你好, 请登录</span>
-            <span class="nav-title">账户与列表</span>
+          <div class="nav-item" @click="handleAccountClick">
+            <span class="nav-label">{{ currentUser ? `你好, ${currentUser.username}` : '你好, 请登录' }}</span>
+            <span class="nav-title">{{ currentUser ? '退出登录' : '账户与列表' }}</span>
           </div>
           <div class="nav-item" @click="router.push('/products')">
             <span class="nav-label">浏览</span>

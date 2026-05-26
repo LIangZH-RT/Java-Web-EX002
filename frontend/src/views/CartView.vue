@@ -1,24 +1,35 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getCartList, updateCartItem, deleteCartItem, type CartItem } from '@/api/cartApi'
+import { useRouter } from 'vue-router'
+import { getCartList, updateCartItem, updateCartSelected, deleteCartItem, type CartItem } from '@/api/cartApi'
 import type { PageResult } from '@/api/productApi'
 
+const router = useRouter()
 const cartItems = ref<CartItem[]>([])
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(8)
 const total = ref(0)
 
+const selectedItems = computed(() => cartItems.value.filter((item) => item.selected))
+const selectedQuantity = computed(() => selectedItems.value.reduce((sum, item) => sum + item.quantity, 0))
 const totalPrice = computed(() => {
-  return cartItems.value.reduce((sum, item) => sum + item.productPrice * item.quantity, 0)
+  return selectedItems.value.reduce((sum, item) => sum + item.productPrice * item.quantity, 0)
 })
+const allSelected = computed(() => cartItems.value.length > 0 && cartItems.value.every((item) => item.selected))
+const partiallySelected = computed(() => selectedItems.value.length > 0 && !allSelected.value)
+
+function toChecked(value: boolean | string | number) {
+  return value === true || value === 'true' || value === 1
+}
 
 function imageUrl(item: CartItem): string {
-  if (item.productImage && item.productImage.trim()) {
-    return item.productImage
+  const value = item.productImage?.trim()
+  if (value && /^(https?:\/\/|data:image\/|\/)/i.test(value)) {
+    return value
   }
-  return `https://placehold.co/80x80/409EFF/white?text=${encodeURIComponent(item.productName)}`
+  return '/images/products/no-image.png'
 }
 
 async function loadCart() {
@@ -28,8 +39,12 @@ async function loadCart() {
     const data = res.data as PageResult<CartItem>
     cartItems.value = data.records
     total.value = data.total
-  } catch {
-    cartItems.value = mockCartItems
+  } catch (error: any) {
+    cartItems.value = []
+    total.value = 0
+    if (error.response?.status === 401) {
+      router.push('/login')
+    }
   } finally {
     loading.value = false
   }
@@ -52,6 +67,37 @@ async function handleQuantityChange(item: CartItem, newQuantity: number | string
     ElMessage.success('数量已更新')
     loadCart()
   } catch {
+    loadCart()
+  }
+}
+
+async function handleSelectedChange(item: CartItem, value: boolean | string | number) {
+  const selected = toChecked(value)
+  const previous = item.selected
+  item.selected = selected
+  try {
+    await updateCartSelected(item.id, selected)
+  } catch {
+    item.selected = previous
+    loadCart()
+  }
+}
+
+async function handleSelectAllChange(value: boolean | string | number) {
+  const selected = toChecked(value)
+  const previous = cartItems.value.map((item) => ({ id: item.id, selected: item.selected }))
+  cartItems.value.forEach((item) => {
+    item.selected = selected
+  })
+  try {
+    await Promise.all(cartItems.value.map((item) => updateCartSelected(item.id, selected)))
+  } catch {
+    previous.forEach((state) => {
+      const item = cartItems.value.find((cartItem) => cartItem.id === state.id)
+      if (item) {
+        item.selected = state.selected
+      }
+    })
     loadCart()
   }
 }
@@ -81,18 +127,9 @@ function handlePageChange(page: number) {
   loadCart()
 }
 
-import { useRouter } from 'vue-router'
-const router = useRouter()
-
 function goShopping() {
   router.push('/products')
 }
-
-const mockCartItems: CartItem[] = [
-  { id: 1, userId: 1, productId: 1, productName: '机械键盘 RGB 青轴', productPrice: 299.00, productImage: '', quantity: 1, stock: 50, createTime: '2024-01-10', updateTime: '2024-01-10' },
-  { id: 2, userId: 1, productId: 2, productName: '无线蓝牙鼠标', productPrice: 129.00, productImage: '', quantity: 2, stock: 120, createTime: '2024-01-11', updateTime: '2024-01-11' },
-  { id: 3, userId: 1, productId: 5, productName: '笔记本电脑支架', productPrice: 89.00, productImage: '', quantity: 1, stock: 200, createTime: '2024-01-12', updateTime: '2024-01-12' },
-]
 
 onMounted(() => {
   loadCart()
@@ -113,6 +150,22 @@ onMounted(() => {
           style="width: 100%"
           :header-cell-style="{ background: '#f5f7fa', color: '#303133', fontWeight: 600 }"
         >
+          <el-table-column width="58" align="center">
+            <template #header>
+              <el-checkbox
+                :model-value="allSelected"
+                :indeterminate="partiallySelected"
+                @change="handleSelectAllChange"
+              />
+            </template>
+            <template #default="{ row }">
+              <el-checkbox
+                :model-value="row.selected"
+                @change="(val: boolean | string | number) => handleSelectedChange(row, val)"
+              />
+            </template>
+          </el-table-column>
+
           <el-table-column label="商品信息" min-width="360">
             <template #default="{ row }">
               <div class="cart-product-cell">
@@ -160,6 +213,7 @@ onMounted(() => {
 
         <div class="cart-footer">
           <div class="cart-total">
+            <span class="selected-count">已选 {{ selectedQuantity }} 件，</span>
             <span class="total-label layui-font-16">合计：</span>
             <span class="total-price">¥{{ totalPrice.toFixed(2) }}</span>
           </div>
@@ -167,8 +221,8 @@ onMounted(() => {
             <el-button @click="goShopping">
               <i class="layui-icon layui-icon-cart-simple"></i> 继续购物
             </el-button>
-            <el-button type="primary" size="large">
-              <i class="layui-icon layui-icon-rmb"></i> 去结算 ({{ cartItems.reduce((s, i) => s + i.quantity, 0) }} 件)
+            <el-button type="primary" size="large" :disabled="selectedQuantity === 0">
+              <i class="layui-icon layui-icon-rmb"></i> 去结算 ({{ selectedQuantity }} 件)
             </el-button>
           </div>
         </div>

@@ -13,13 +13,21 @@
     </resultMap>
 
     <select id="selectById" resultMap="ProductMap">
-        select ID as id, name, price, descriptoion as description, imgURL as imageUrl
+        select ID as id,
+               name,
+               price,
+               description,
+               imgurl as imageUrl
         from products
         where ID = #{id}
     </select>
 
     <select id="selectPage" resultMap="ProductMap">
-        select ID as id, name, price, descriptoion as description, imgURL as imageUrl
+        select ID as id,
+               name,
+               price,
+               description,
+               imgurl as imageUrl
         from products
         order by ID desc
         limit #{offset}, #{pageSize}

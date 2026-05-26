@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.liang.mapper.UserMapper">
+    <resultMap id="UserMap" type="User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="password" property="password"/>
+    </resultMap>
+
+    <select id="findUserTableName" resultType="string">
+        select table_name
+        from information_schema.tables
+        where table_schema = database()
+          and table_name in ('user', 'users', 't_user')
+        order by field(table_name, 'user', 'users', 't_user')
+        limit 1
+    </select>
+
+    <select id="selectByUsername" resultMap="UserMap">
+        select id, username, password
+        from ${tableName}
+        where username = #{username}
+        limit 1
+    </select>
+
+    <insert id="insertUser">
+        insert into ${tableName} (username, password)
+        values (#{username}, #{password})
+    </insert>
+</mapper>

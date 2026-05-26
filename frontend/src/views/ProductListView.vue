@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { getProducts, type Product, type PageResult } from '@/api/productApi'
+import { addToCart } from '@/api/cartApi'
 
 const route = useRoute()
+const router = useRouter()
 
 const products = ref<Product[]>([])
 const loading = ref(false)
 const loadFailed = ref(false)
+const addingProductId = ref<number | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(12)
 const total = ref(0)
@@ -17,9 +21,9 @@ const rangeEnd = computed(() => (currentPage.value - 1) * pageSize.value + produ
 function displayImageUrl(product: Product): string | null {
   const value = product.imageUrl?.trim()
   if (!value) {
-    return null
+    return '/images/products/no-image.png'
   }
-  return /^(https?:\/\/|data:image\/|\/)/i.test(value) ? value : null
+  return /^(https?:\/\/|data:image\/|\/)/i.test(value) ? value : '/images/products/no-image.png'
 }
 
 async function loadProducts() {
@@ -43,6 +47,20 @@ function handlePageChange(page: number) {
   currentPage.value = page
   loadProducts()
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+async function handleAddToCart(product: Product) {
+  addingProductId.value = product.id
+  try {
+    await addToCart(product.id, 1)
+    ElMessage.success('已加入购物车')
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      router.push('/login')
+    }
+  } finally {
+    addingProductId.value = null
+  }
 }
 
 onMounted(() => {
@@ -100,6 +118,13 @@ watch(() => route.query, () => {
             <span class="price-decimal">.{{ String(Math.round((product.price % 1) * 100)).padStart(2, '0') }}</span>
           </div>
 
+          <el-button
+            class="add-cart-btn"
+            :loading="addingProductId === product.id"
+            @click="handleAddToCart(product)"
+          >
+            <i class="layui-icon layui-icon-cart-simple"></i> 加入购物车
+          </el-button>
         </div>
       </div>
     </div>
@@ -235,6 +260,20 @@ watch(() => route.query, () => {
   color: #b12704;
   position: relative;
   top: -6px;
+}
+
+.add-cart-btn {
+  width: 100%;
+  margin-top: auto;
+  background: #ffd814;
+  border-color: #fcd200;
+  color: #111;
+  border-radius: 16px;
+}
+.add-cart-btn:hover {
+  background: #f7ca00;
+  border-color: #f2c200;
+  color: #111;
 }
 
 /* ===== 分页 ===== */

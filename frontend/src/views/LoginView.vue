@@ -2,18 +2,18 @@
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { login, register } from '@/api/authApi'
 
 const router = useRouter()
 const activeTab = ref('login')
 
 const loginForm = reactive({
-  email: '',
+  username: '',
   password: '',
 })
 
 const registerForm = reactive({
-  name: '',
-  email: '',
+  username: '',
   password: '',
   confirmPassword: '',
 })
@@ -21,21 +21,25 @@ const registerForm = reactive({
 const loginLoading = ref(false)
 const registerLoading = ref(false)
 
-function handleLogin() {
-  if (!loginForm.email || !loginForm.password) {
-    ElMessage.warning('请填写邮箱和密码')
+async function handleLogin() {
+  if (!loginForm.username || !loginForm.password) {
+    ElMessage.warning('请填写用户名和密码')
     return
   }
   loginLoading.value = true
-  setTimeout(() => {
-    loginLoading.value = false
-    ElMessage.success('登录成功（演示）')
+  try {
+    await login(loginForm.username, loginForm.password)
+    ElMessage.success('登录成功')
     router.push('/')
-  }, 800)
+  } catch {
+    // 错误消息由 axios 响应拦截器统一展示。
+  } finally {
+    loginLoading.value = false
+  }
 }
 
-function handleRegister() {
-  if (!registerForm.name || !registerForm.email || !registerForm.password) {
+async function handleRegister() {
+  if (!registerForm.username || !registerForm.password) {
     ElMessage.warning('请填写必填项')
     return
   }
@@ -44,13 +48,15 @@ function handleRegister() {
     return
   }
   registerLoading.value = true
-  setTimeout(() => {
+  try {
+    await register(registerForm.username, registerForm.password)
+    ElMessage.success('注册成功，请继续购物')
+    router.push('/')
+  } catch {
+    // 错误消息由 axios 响应拦截器统一展示。
+  } finally {
     registerLoading.value = false
-    ElMessage.success('注册成功（演示）')
-    activeTab.value = 'login'
-    loginForm.email = registerForm.email
-    loginForm.password = ''
-  }, 800)
+  }
 }
 </script>
 
@@ -66,12 +72,12 @@ function handleRegister() {
     <div class="login-card layui-panel">
       <el-tabs v-model="activeTab" class="login-tabs" stretch>
         <el-tab-pane label="登录" name="login">
-          <p class="tab-subtitle layui-font-13">使用邮箱和密码登录您的账户</p>
+          <p class="tab-subtitle layui-font-13">使用用户名和密码登录您的账户</p>
           <el-form :model="loginForm" label-position="top" size="large">
-            <el-form-item label="邮箱地址">
-              <el-input v-model="loginForm.email" placeholder="请输入邮箱">
+            <el-form-item label="用户名">
+              <el-input v-model="loginForm.username" placeholder="请输入用户名">
                 <template #prefix>
-                  <i class="layui-icon layui-icon-email"></i>
+                  <i class="layui-icon layui-icon-username"></i>
                 </template>
               </el-input>
             </el-form-item>
@@ -97,17 +103,10 @@ function handleRegister() {
         <el-tab-pane label="注册" name="register">
           <p class="tab-subtitle layui-font-13">创建一个新账户开始购物</p>
           <el-form :model="registerForm" label-position="top" size="large">
-            <el-form-item label="姓名">
-              <el-input v-model="registerForm.name" placeholder="请输入姓名">
+            <el-form-item label="用户名">
+              <el-input v-model="registerForm.username" placeholder="最长 45 个字符">
                 <template #prefix>
                   <i class="layui-icon layui-icon-username"></i>
-                </template>
-              </el-input>
-            </el-form-item>
-            <el-form-item label="邮箱地址">
-              <el-input v-model="registerForm.email" placeholder="请输入邮箱">
-                <template #prefix>
-                  <i class="layui-icon layui-icon-email"></i>
                 </template>
               </el-input>
             </el-form-item>

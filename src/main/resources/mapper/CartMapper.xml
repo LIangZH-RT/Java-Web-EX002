@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.liang.mapper.CartMapper">
+    <resultMap id="CartItemMap" type="CartItem">
+        <id column="id" property="id"/>
+        <result column="userId" property="userId"/>
+        <result column="productId" property="productId"/>
+        <result column="productName" property="productName"/>
+        <result column="productPrice" property="productPrice"/>
+        <result column="productImage" property="productImage"/>
+        <result column="quantity" property="quantity"/>
+        <result column="selected" property="selected" javaType="java.lang.Boolean"/>
+        <result column="stock" property="stock"/>
+        <result column="createTime" property="createTime"/>
+        <result column="updateTime" property="updateTime"/>
+    </resultMap>
+
+    <sql id="CartItemSelectColumns">
+        c.id,
+        c.user_id as userId,
+        c.productid as productId,
+        p.name as productName,
+        p.price as productPrice,
+        p.imgurl as productImage,
+        c.quantity,
+        c.selected,
+        999 as stock,
+        date_format(c.create_time, '%Y-%m-%d %H:%i:%s') as createTime,
+        date_format(c.update_time, '%Y-%m-%d %H:%i:%s') as updateTime
+    </sql>
+
+    <select id="findCartTableName" resultType="string">
+        select table_name
+        from information_schema.tables
+        where table_schema = database()
+          and table_name in ('t_cart_item', 'cart_item', 'cart')
+        order by field(table_name, 't_cart_item', 'cart_item', 'cart')
+        limit 1
+    </select>
+
+    <update id="createDefaultCartTable">
+        create table if not exists t_cart_item (
+            id BIGINT(20) NOT NULL AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            productid INT NOT NULL,
+            quantity INT NOT NULL DEFAULT 1,
+            selected TINYINT(1) NOT NULL DEFAULT 1 COMMENT '是否选中（1:选中, 0:未选中），用于结算',
+            create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uk_cart_user_product (user_id, productid),
+            KEY idx_cart_user_update (user_id, update_time),
+            KEY idx_cart_user_selected (user_id, selected)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='购物车明细表'
+    </update>
+
+    <select id="selectByUserAndProduct" resultMap="CartItemMap">
+        select
+        <include refid="CartItemSelectColumns"/>
+        from ${tableName} c
+        inner join products p on p.ID = c.productid
+        where c.user_id = #{userId}
+          and c.productid = #{productId}
+        limit 1
+    </select>
+
+    <select id="selectByIdAndUser" resultMap="CartItemMap">
+        select
+        <include refid="CartItemSelectColumns"/>
+        from ${tableName} c
+        inner join products p on p.ID = c.productid
+        where c.user_id = #{userId}
+          and c.id = #{cartItemId}
+        limit 1
+    </select>
+
+    <select id="selectPage" resultMap="CartItemMap">
+        select
+        <include refid="CartItemSelectColumns"/>
+        from ${tableName} c
+        inner join products p on p.ID = c.productid
+        where c.user_id = #{userId}
+        order by c.update_time desc, c.id desc
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="countByUser" resultType="long">
+        select count(*)
+        from ${tableName}
+        where user_id = #{userId}
+    </select>
+
+    <insert id="insertItem">
+        insert into ${tableName} (user_id, productid, quantity, selected)
+        values (#{userId}, #{productId}, #{quantity}, 1)
+    </insert>
+
+    <update id="updateQuantity">
+        update ${tableName}
+        set quantity = #{quantity}
+        where user_id = #{userId}
+          and id = #{cartItemId}
+    </update>
+
+    <update id="updateSelected">
+        update ${tableName}
+        set selected = #{selected}
+        where user_id = #{userId}
+          and id = #{cartItemId}
+    </update>
+
+    <delete id="deleteByIdAndUser">
+        delete from ${tableName}
+        where user_id = #{userId}
+          and id = #{cartItemId}
+    </delete>
+</mapper>

@@ -234,8 +234,9 @@ frontend/src/
 - [x] `web.xml` 配置 `ProductServlet` 商品接口映射
 - [x] `pom.xml` 添加商品接口所需的 Servlet API、MySQL 驱动、MyBatis、Jackson 依赖
 - [x] 商品列表前后端联调
-- [ ] 用户、购物车等后续后端接口及数据表
-- [ ] 通用 Filter / Listener
+- [x] 用户登录后端接口、购物车基础接口
+- [x] 通用 Filter：UTF-8 编码过滤器、购物车登录过滤器
+- [x] 购物车数据表持久化（MyBatis `t_cart_item` 表，按登录用户保存购物车明细）
 - [ ] 实验报告
 
 ---
@@ -286,3 +287,123 @@ frontend/src/
 - 通过 `ProductServiceImpl.findPage(1, 12)` 对数据库执行只读查询：`products` 表共读取到 `100` 条商品，第一页返回 `12` 条，确认 MyBatis 连接池、Mapper 与商品数据查询链路可用。
 - 已部署到本机 Tomcat 10.1：`GET http://localhost:8080/EX002/api/products?page=1&pageSize=2` 返回真实商品 JSON。
 - 已启动 Vite 开发服务：`http://127.0.0.1:5173/products` 可访问，`/api/products` 代理到 Tomcat 后端并返回真实商品数据。
+
+---
+
+## 2026-05-26 — 用户登录、购物车接口与登录过滤器
+
+### 1. 后端登录链路
+
+- 新增 `User` 实体，对应用户表字段：`id`、`username`、`password`。
+- 新增 `UserMapper` 与 `mapper/UserMapper.xml`，通过 MyBatis 查询用户表。
+- 用户表名支持自动识别 `user`、`users`、`t_user`，字段按当前已创建结构 `id / username / password` 映射。
+- 新增 `AuthService`、`AuthServiceImpl`，封装登录和注册逻辑。
+- 新增 `LoginUser` DTO，只向前端返回 `id` 和 `username`，不返回密码。
+- 新增 `AuthServlet`，提供接口：
+
+| 方法 | URL | 参数 | 说明 |
+|------|-----|------|------|
+| POST | `/api/auth/login` | `username`, `password` | 登录成功后写入 `HttpSession` |
+| POST | `/api/auth/register` | `username`, `password` | 注册用户并写入登录态 |
+| POST | `/api/auth/logout` | - | 清除当前 Session |
+| GET | `/api/auth/current` | - | 获取当前登录用户 |
+
+### 2. 过滤器
+
+- 新增 `EncodingFilter`，拦截 `/*`，统一设置请求和响应编码为 UTF-8。
+- 新增 `LoginFilter`，拦截 `/api/cart/*`。
+- 当未登录用户访问购物车接口时，返回 HTTP `401` 和统一 JSON：`{ success: false, message: "请先登录后再操作购物车" }`。
+- 在 `web.xml` 中注册两个 Filter，并将 Session Cookie path 设置为 `/`，便于 Vite 代理开发环境下保持登录态。
+
+### 3. 购物车基础接口
+
+- 新增 `CartItem` 实体、`CartService`、`CartServiceImpl`、`CartServlet`。
+- 当前购物车按登录用户 ID 保存在服务端内存中，可满足本阶段“登录后才能添加购物车”的联调；后续如需要重启后保留数据，再扩展为 MyBatis 购物车表持久化。
+- 购物车接口：
+
+| 方法 | URL | 参数 | 说明 |
+|------|-----|------|------|
+| GET | `/api/cart/list` | `page`, `pageSize` | 查询当前登录用户购物车分页 |
+| POST | `/api/cart/add` | `productId`, `quantity` | 添加商品到购物车 |
+| POST | `/api/cart/update` | `cartItemId`, `quantity` | 修改购物车商品数量 |
+| POST | `/api/cart/delete` | `cartItemId` | 删除购物车商品 |
+
+### 4. 前端联调
+
+- 新增 `frontend/src/api/authApi.ts`，封装登录、注册、退出和当前用户接口。
+- `LoginView.vue` 从演示登录改为真实调用后端接口，表单字段改为用户名和密码。
+- `ProductListView.vue` 恢复“加入购物车”按钮，点击后调用 `/api/cart/add`；未登录时根据 401 自动跳转 `/login`。
+- `CartView.vue` 删除本地模拟购物车回退，改为只展示后端返回的当前登录用户购物车。
+- `App.vue` 导航栏读取当前登录用户；登录后显示用户名，点击账户区可退出登录。
+- `request.ts` 优先展示后端 JSON 错误消息，便于显示过滤器返回的未登录提示。
+
+### 5. 验证结果
+
+- 修正 `db.property`，将数据库配置键统一为 MyBatis 当前读取的 `driver`、`url`、`username`、`password` 和 `pool*` 系列参数，并修正 JDBC URL 编码、SSL、时区参数。
+- `mvn test -q`：通过。
+- `mvn package -q`：通过，已生成 `target/EX002.war`。
+- `npm run build`：通过；仍存在 Vite 对大 chunk 的体积警告，不影响本次登录和购物车功能。
+
+### 6. 当前进度
+
+- 已完成用户登录、注册、退出、当前用户查询接口。
+- 已完成购物车接口的登录过滤保护，未登录不能添加购物车。
+- 已完成前端登录页、商品加入购物车、购物车页与后端接口联调代码。
+- 未完成项：实验报告。购物车数据表持久化见后续记录。
+
+---
+
+## 2026-05-26 (续) — 商品图片字段内容改为占位图后的适配
+
+- 已确认数据库 `products` 表图片字段仍保留，只是 `imgurl` 字段内容已统一改为 `/images/products/no-image.png`。
+- 修正 `ProductMapper.xml`：商品分页和详情 SQL 恢复从数据库读取 `imgurl as imageUrl`，商品数据继续由 MyBatis 动态查询。
+- 前端保留公共占位图：`frontend/public/images/products/no-image.png`。
+- `ProductListView.vue` 和 `CartView.vue` 只在后端返回空值或非法图片地址时兜底为 `/images/products/no-image.png`，不会覆盖数据库返回的 `imgurl`。
+- 验证结果：
+  - 本机 Tomcat 已监听 `8080`。
+  - `mvn package -q`：通过，已重新生成 `target/EX002.war`。
+  - 已将新 WAR 部署到本机 Tomcat。
+  - 已确认 Tomcat 展开的 `ProductMapper.xml` 使用 `imgurl as imageUrl`，不是固定写死占位图。
+  - `GET http://localhost:8080/EX002/api/products?page=1&pageSize=2` 返回商品 JSON，`imageUrl` 值来自数据库字段；当前返回 `/images/products/no-image.png` 是因为数据库 `imgurl` 字段内容就是该路径。
+
+---
+
+## 2026-05-26 (续) — 购物车数据表持久化与结算选中状态
+
+### 1. 数据库字段设计
+
+按最终购物车持久化需求确定 `t_cart_item` 表结构；用户给出的 `datatime` 按 MySQL 正确类型修正为 `DATETIME`：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | `BIGINT(20)` | 主键，自增 |
+| `user_id` | `INT` | 登录用户 ID |
+| `productid` | `INT` | 商品 ID，按现有商品表 `products.ID` 关联 |
+| `quantity` | `INT` | 购物车商品数量 |
+| `selected` | `TINYINT(1)` | 是否选中，`1` 选中、`0` 未选中，用于结算 |
+| `create_time` | `DATETIME` | 创建时间，默认 `CURRENT_TIMESTAMP` |
+| `update_time` | `DATETIME` | 更新时间，默认 `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` |
+
+同时增加 `UNIQUE KEY uk_cart_user_product (user_id, productid)`，保证同一用户同一商品只保留一条购物车记录；增加用户更新时间和用户选中状态索引，便于分页和结算查询。
+
+### 2. 后端持久化实现
+
+- 新增 `CartMapper` 与 `mapper/CartMapper.xml`，提供购物车表创建、分页查询、按用户和商品查询、数量更新、选中状态更新和删除能力。
+- `mybatis-config.xml` 注册 `CartMapper.xml`。
+- `CartServiceImpl` 从服务端内存 `Map` 改为 MyBatis 数据库读写；首次访问购物车时如果不存在 `t_cart_item`、`cart_item` 或 `cart` 表，会自动创建默认 `t_cart_item`。
+- 购物车列表通过 `t_cart_item` 关联 `products` 表输出商品名称、价格和图片字段，前端仍接收 `productName`、`productPrice`、`productImage` 等展示字段。
+- `CartItem.id` 按数据库 `BIGINT(20)` 调整为 `Long`，新增 `selected` 字段。
+
+### 3. 接口和前端产出
+
+- `CartServlet` 新增 `POST /api/cart/select`，参数为 `cartItemId`、`selected`，用于持久化单条购物车明细的结算选中状态。
+- `frontend/src/api/cartApi.ts` 增加 `selected` 类型字段和 `updateCartSelected` 请求方法。
+- `CartView.vue` 增加单选、全选和半选状态；合计金额与“去结算”数量只统计已选中的商品，未选中时禁用结算按钮。
+
+### 4. 验证结果
+
+- `mvn test -q`：通过。
+- `mvn package -q`：通过，已生成包含 `CartMapper.xml` 的 `target/EX002.war`。
+- `npm run build`：通过；仍存在 Vite 对大 chunk 的体积警告，不影响购物车持久化和选中状态功能。
+- 已将新 WAR 部署到本机 Tomcat。
+- 冒烟检查：`GET http://localhost:8080/EX002/api/products?page=1&pageSize=2` 返回 `200`；`GET /api/auth/current` 返回 `200`；未登录访问 `GET /api/cart/list?page=1&pageSize=8` 返回 `401`，登录过滤器仍生效。

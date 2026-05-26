@@ -9,6 +9,7 @@ export interface CartItem {
   productPrice: number
   productImage: string
   quantity: number
+  selected: boolean
   stock: number
   createTime: string
   updateTime: string
@@ -29,6 +30,12 @@ export function addToCart(productId: number, quantity: number = 1) {
 export function updateCartItem(cartItemId: number, quantity: number) {
   return request.post<any, { success: boolean; message: string; data: any }>('/cart/update', null, {
     params: { cartItemId, quantity },
+  })
+}
+
+export function updateCartSelected(cartItemId: number, selected: boolean) {
+  return request.post<any, { success: boolean; message: string; data: any }>('/cart/select', null, {
+    params: { cartItemId, selected },
   })
 }
 
