@@ -1,5 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace = "com.liang.mapper.ProductMapper">
+<mapper namespace="com.liang.mapper.ProductMapper">
+    <resultMap id="ProductMap" type="Product">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="price" property="price"/>
+        <result column="imageUrl" property="imageUrl"/>
+        <result column="description" property="description"/>
+    </resultMap>
 
+    <select id="selectById" resultMap="ProductMap">
+        select ID as id, name, price, descriptoion as description, imgURL as imageUrl
+        from products
+        where ID = #{id}
+    </select>
 
+    <select id="selectPage" resultMap="ProductMap">
+        select ID as id, name, price, descriptoion as description, imgURL as imageUrl
+        from products
+        order by ID desc
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="countAll" resultType="long">
+        select count(*)
+        from products
+    </select>
 </mapper>

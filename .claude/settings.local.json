@@ -3,6 +3,7 @@
     "allow": [
       "Read(//mnt/d/Code/JavaWeb/EX002/**)",
       "Read(//mnt/d/Code/JavaWeb/EX002/frontend/**)",
+      "Read(//mnt/d/Code/JavaWeb/EX002/docs/**)",
       "Bash(npm install *)",
       "Bash(npx vite *)",
       "WebFetch(domain:localhost)",

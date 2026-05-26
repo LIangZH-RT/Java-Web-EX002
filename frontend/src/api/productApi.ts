@@ -4,11 +4,8 @@ export interface Product {
   id: number
   name: string
   price: number
-  stock: number
-  imageUrl: string
-  description: string
-  status: number
-  createTime: string
+  imageUrl: string | null
+  description: string | null
 }
 
 export interface PageResult<T> {

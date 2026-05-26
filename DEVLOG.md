@@ -3,7 +3,7 @@
 ## 项目概述
 
 - **项目名称**：EX002 — 基于 MVC 设计模式的在线购物系统
-- **技术栈**：Java Web (Servlet + JDBC + Druid) + Vue 3 (Element Plus + axios)
+- **技术栈**：Java Web (Servlet + MyBatis `POOLED`) + Vue 3 (Element Plus + axios)
 - **构建工具**：Maven (WAR) + Vite
 - **数据库**：MySQL 8.0+
 - **运行环境**：JDK 17+ / Tomcat 10+ / Node.js 20+
@@ -228,10 +228,61 @@ frontend/src/
 
 ## 待完成
 
-- [ ] 后端 Java 代码：实体类 / DAO / Service / Servlet / Filter / Listener
-- [ ] 数据库建表：`t_user`、`t_product`、`t_cart_item`
-- [ ] 数据库连接池配置（Druid `druid.properties`）
-- [ ] `web.xml` 配置 Servlet 映射、Filter、Listener
-- [ ] `pom.xml` 添加依赖：Servlet API、MySQL 驱动、Druid、Jackson 等
-- [ ] 前后端联调
+- [x] 商品展示后端链路：实体类 / Mapper / Service / Servlet / 分页响应
+- [x] 商品数据表 `products` 查询接入
+- [x] 商品查询数据库连接池配置：MyBatis 内置 `POOLED`，暂不使用 `DBUtils`
+- [x] `web.xml` 配置 `ProductServlet` 商品接口映射
+- [x] `pom.xml` 添加商品接口所需的 Servlet API、MySQL 驱动、MyBatis、Jackson 依赖
+- [x] 商品列表前后端联调
+- [ ] 用户、购物车等后续后端接口及数据表
+- [ ] 通用 Filter / Listener
 - [ ] 实验报告
+
+---
+
+## 2026-05-25 — MyBatis 商品展示前后端联调
+
+### 1. 实际商品表适配
+
+已基于本地 `local_shop` 数据库中的真实商品表完成映射：
+
+| 数据库列 | Java / JSON 字段 | 处理方式 |
+|------|------|------|
+| `ID` | `id` | SQL 别名映射 |
+| `name` | `name` | 直接映射 |
+| `price` | `price` | 直接映射 |
+| `descriptoion` | `description` | 保留数据库现有列名，通过 SQL 别名对外提供规范字段 |
+| `imgURL` | `imageUrl` | SQL 别名映射；当前库中的值均为占位值 `1` |
+
+商品表目前不包含库存字段，因此本次商品展示不输出模拟库存，也不将“加入购物车”作为已完成能力。`imgURL` 当前尚无可加载图片地址，前端仅对合法图片 URL 渲染图片，其余显示“暂无图片”，避免破图。
+
+### 2. 后端实现
+
+- 修正 `Product` 实体与数据库展示字段的对应关系，使用 `imageUrl` 与 `description` 输出前端需要的数据。
+- 使用 `ProductMapper` 与 `mapper/ProductMapper.xml` 完成商品分页查询、商品总数查询和按 ID 查询。
+- 新增 `MyBatisUtil`，读取 `mybatis-config.xml` 创建单例 `SqlSessionFactory`；商品查询通过 MyBatis 内置 `POOLED` 数据源访问数据库，未调用 `DBUtils`。
+- 新增 `ProductService`、`ProductServiceImpl`，封装分页和详情查询。
+- 新增 `Result`、`PageResult` DTO，统一输出 `{ success, message, data }` 响应结构。
+- 新增 `ProductServlet` 并在 `web.xml` 注册接口：
+
+| 方法 | URL | 参数 | 返回内容 |
+|------|-----|------|------|
+| GET | `/api/products` | `page`, `pageSize` | 分页商品列表 |
+| GET | `/api/products/detail` | `productId` | 单件商品详情 |
+
+### 3. 前端实现
+
+- `productApi.ts` 类型与后端商品 JSON 字段对齐，图片和描述支持数据库空值。
+- `ProductListView.vue` 仅渲染接口返回的数据库商品，删除接口失败后回退到内置模拟商品的逻辑。
+- 商品卡片展示数据库中的名称、图片、描述和价格；图片为空时显示本地空状态。
+- 接口失败时显示加载失败提示，分页区间按当前页正确计算。
+- `main.ts` 改为使用 Element Plus 提供的中文 locale，修复类型检查错误。
+
+### 4. 验证结果
+
+- `mvn test -q`：通过。
+- `mvn package -q`：通过，已生成可部署的 `target/EX002.war`。
+- `npm run build`：类型检查和 Vite 生产构建通过；存在已有的大 chunk 体积警告，不阻断商品展示。
+- 通过 `ProductServiceImpl.findPage(1, 12)` 对数据库执行只读查询：`products` 表共读取到 `100` 条商品，第一页返回 `12` 条，确认 MyBatis 连接池、Mapper 与商品数据查询链路可用。
+- 已部署到本机 Tomcat 10.1：`GET http://localhost:8080/EX002/api/products?page=1&pageSize=2` 返回真实商品 JSON。
+- 已启动 Vite 开发服务：`http://127.0.0.1:5173/products` 可访问，`/api/products` 代理到 Tomcat 后端并返回真实商品数据。

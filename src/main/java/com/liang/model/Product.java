@@ -2,23 +2,18 @@ package com.liang.model;
 
 public class Product {
 
-    /*
-    * 使用封装数据类型
-    * */
-
     private Integer id;
     private String name;
     private Double price;
     private String description;
-    private String imgURL;
+    private String imageUrl;
 
-
-    public String getImgURL() {
-        return imgURL;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setImgURL(String imgURL) {
-        this.imgURL = imgURL;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getDescription() {
