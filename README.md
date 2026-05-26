@@ -174,9 +174,4 @@ npm run build
 
 ## 文档
 
-- `docs/实验二项目说明.md`：实验目标、功能要求和推荐开发顺序。
-- `docs/M-Model层说明.md`：实体、DTO、数据库表设计。
-- `docs/C-Controller层说明.md`：Servlet、Filter 和接口设计。
-- `docs/V-View层说明.md`：页面和前端交互流程。
-- `docs/MyBatis使用说明.md`：MyBatis 配置和使用示例。
 - `DEVLOG.md`：项目开发过程和验证记录。
